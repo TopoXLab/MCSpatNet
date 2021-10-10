@@ -5,9 +5,9 @@
 
 
 <figure>
-  <img src="./arch5.png" alt="Trulli" style="width:90%">
+  <img src="./arch5.png" alt="MCSpatNet Architecture" style="width:90%">
 <p align="center"> 
-  <figcaption style="font-weight:bold">Multi-Class Spatial Network (MCSpatNet)</figcaption>
+  <figcaption style="font-weight:bold;text-align:center">Multi-Class Spatial Network (MCSpatNet)</figcaption>
 </p>
 </figure>
 
