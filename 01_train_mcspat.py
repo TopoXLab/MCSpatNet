@@ -1,7 +1,3 @@
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
 import numpy as np
 import time
 import torch
@@ -14,34 +10,62 @@ import skimage.io as io
 import cv2
 from skimage import filters
 from skimage.measure import label, moments
+import glob
 
 from model_arch import UnetVggMultihead
-from my_dataset_wdots_til_multi_subclasses_kfunc_wname import CellsDataset
-from my_dataset_wdots_til_multi_wname import CellsDataset as CellsDataset_simple
+from my_dataloader_w_kfunc import CellsDataset
+from my_dataloader import CellsDataset as CellsDataset_simple
 from cluster_helper import *
+
+checkpoints_root_dir = '../MCSpatNet_checkpoints' # The root directory for all training output.
+checkpoints_folder_name = 'mcspatnet_consep_1' # The name of the folder that will be created under <checkpoints_root_dir> to hold output from current training instance.
+model_param_path        = None;  # path of a previous checkpoint to continue training
+clustering_pseudo_gt_root = '../MCSpatNet_epoch_subclasses'
+train_data_root = '../MCSpatNet_datasets/CoNSeP_train'
+test_data_root = '../MCSpatNet_datasets/CoNSeP_train'
+train_split_filepath = './data_splits/consep/train_split.txt'
+test_split_filepath = './data_splits/consep/val_split.txt'
+epochs  = 300 # number of training epochs. Use 300 for CoNSeP dataset.
+
 
 cell_code = {1:'lymphocyte', 2:'tumor', 3:'stromal'}
 
 feature_code = {'decoder':0, 'cell-detect':1, 'class':2, 'subclass':3, 'k-cell':4}
 
 
+
+
 if __name__=="__main__":
-    # model_param_path: path of a previous checkpoint to continue training
-    model_param_path        = None; #e0
 
     # checkpoints_save_path: path to save checkpoints
-    checkpoints_save_path   = '../checkpoints_knn/cellcount_r100_multihead_concat_cluster2a_initk_configl_do0.2_restart_brcanew_s4';
+    checkpoints_save_path   = os.path.join(checkpoints_root_dir, checkpoints_folder_name)
+    cluster_tmp_out         = os.path.join(clustering_pseudo_gt_root, checkpoints_folder_name)
 
-    # log_file_path: path to save logfile
-    log_file_path           = '../training_out_files_knn/cellcount_r100_multihead_concat_cluster2a_initk_configl_do0.2_restart_brcanew_s4_log.txt';
+    if not os.path.exists(checkpoints_root_dir):
+        os.mkdir(checkpoints_root_dir)
 
-    # cluster_tmp_out: path to save clustering temporary training ground truth generated each epoch
-    cluster_tmp_out         = '../epoch_subclasses/cellcount_r100_multihead_concat_cluster2a_initk_configl_do0.2_restart_brcanew_s4'
+    if not os.path.exists(checkpoints_save_path):
+        os.mkdir(checkpoints_save_path)
+
+    if not os.path.exists(clustering_pseudo_gt_root):
+        os.mkdir(clustering_pseudo_gt_root)
+
+    if not os.path.exists(cluster_tmp_out):
+        os.mkdir(cluster_tmp_out)
+
+
+    # log_file_path: path to save log file
+    i=1
+    while(True):
+        log_file_path = os.path.join(checkpoints_root_dir, checkpoints_folder_name, f'train_log_{i}.txt') 
+        if(not os.path.exists(log_file_path)):
+            break
+        i +=1
+
     start_epoch             = 0  # To use if continuing training from a previous epoch loaded from model_param_path
-    epoch_start_eval_prec   = 10 # After epoch_start_eval_prec epochs start to evaluate F-score of predictions on the validation set.
+    epoch_start_eval_prec   = 1 # After epoch_start_eval_prec epochs start to evaluate F-score of predictions on the validation set.
     restart_epochs_freq     = 50 # reset frequency for optimizer
     next_restart_epoch      = restart_epochs_freq + start_epoch
-    epochs                  = 200 # max epochs # we use it proportional to dataset size.
     gpu_or_cpu              ='cuda' # use cuda or cpu
     device=torch.device(gpu_or_cpu)
     seed                    = time.time()
@@ -52,22 +76,20 @@ if __name__=="__main__":
 
     
     # Configure training dataset
-    train_image_root='../datasets/tcga_brca_all_cc/images'
-    train_dmap_root='../datasets/tcga_brca_all_cc/gt_custom_all_3class'
-    train_dots_root='../datasets/tcga_brca_all_cc/gt_custom_all_3class'
-    train_dmap_subclasses_root=cluster_tmp_out
-    train_dots_subclasses_root=train_dmap_subclasses_root
-    train_kmap_root='../datasets/tcga_brca_all_cc/k_func_maps'    
-    train_split_filepath = '../datasets/tcga_brca_all_cc/splits/brca_ds_train_s4.txt'
+    train_image_root = os.path.join(train_data_root, 'images')
+    train_dmap_root = os.path.join(train_data_root, 'gt_custom') 
+    train_dots_root = os.path.join(train_data_root, 'gt_custom') 
+    train_dmap_subclasses_root = cluster_tmp_out
+    train_dots_subclasses_root = train_dmap_subclasses_root
+    train_kmap_root = os.path.join(train_data_root, 'k_func_maps') 
 
     # Configure validation dataset
-    test_image_root='../datasets/tcga_brca_all_cc/images'
-    test_dmap_root='../datasets/tcga_brca_all_cc/gt_custom_all_3class'
-    test_dots_root='../datasets/tcga_brca_all_cc/gt_custom_all_3class'
-    test_dmap_subclasses_root=cluster_tmp_out
-    test_dots_subclasses_root=test_dmap_subclasses_root
-    test_kmap_root='../datasets/tcga_brca_all_cc/k_func_maps'
-    test_split_filepath = '../datasets/tcga_brca_all_cc/splits/brca_ds_val_s4.txt'
+    test_image_root = os.path.join(test_data_root, 'images')
+    test_dmap_root = os.path.join(test_data_root, 'gt_custom')
+    test_dots_root = os.path.join(test_data_root, 'gt_custom')
+    test_dmap_subclasses_root = cluster_tmp_out
+    test_dots_subclasses_root = test_dmap_subclasses_root
+    test_kmap_root = os.path.join(test_data_root, 'k_func_maps') 
     
 
     dropout_prob = 0.2
@@ -84,7 +106,7 @@ if __name__=="__main__":
 
     lr  = 0.00005 # learning rate
     batch_size = 1
-    prints_per_epoch=2 # print frequency per epoch
+    prints_per_epoch=1 # print frequency per epoch
 
     # Initialize the range of the radii for the K function for each class
     r_step = 15
@@ -130,39 +152,20 @@ if __name__=="__main__":
     simple_train_loader=torch.utils.data.DataLoader(simple_train_dataset,batch_size=batch_size,shuffle=False)
 
 
-    if not os.path.exists(checkpoints_save_path):
-        os.mkdir(checkpoints_save_path)
-
-    if not os.path.exists(cluster_tmp_out):
-        os.mkdir(cluster_tmp_out)
-
-
-    # train_loss_list_k_l1=[]
-    # train_loss_list_dice=[]
-    # test_loss_list_knn=[]
-    # test_loss_wo_nan_list_knn = []
-    # test_loss_list_dice=[]
-    #
-    # test_precision_mean_list=[]
-    # test_recall_mean_list=[]
-    # test_f1_mean_list=[]
-    # best_recall_mean = 0
-    # test_f1_wmean_list = []
-    # best_f1_wmean = 0
-
     # Use prints_per_epoch to get iteration number to generate sample output
     # print_frequency = len(train_loader)//prints_per_epoch;
     print_frequency_test = len(test_loader) // prints_per_epoch;
 
     best_epoch_filepath=None
     best_epoch=None
-    best_f1_mean = math.inf
+    best_f1_mean = 0
     best_prec_recall_diff = math.inf
 
     centroids = None
     for epoch in range(start_epoch,epochs):
         # If epoch already exists then skip
-        if os.path.isfile(os.path.join(checkpoints_save_path, 'mcspat_epoch_'+str(epoch)+".pth")):
+        epoch_files = glob.glob(os.path.join(checkpoints_save_path, 'mcspat_epoch_'+str(epoch)+"_*.pth"))
+        if len(epoch_files) > 0:
             continue;
         # Cluster features at the beginning of each epoch
         print('epoch', epoch, 'start clustering')
@@ -280,7 +283,6 @@ if __name__=="__main__":
         tp_count_all = np.zeros((n_classes_out))
         fp_count_all = np.zeros((n_classes_out))
         fn_count_all = np.zeros((n_classes_out))
-        fig, ax = plt.subplots();
         test_count_k = 0
         for i,(img,gt_dmap,gt_dots,gt_dmap_subclasses,gt_dots_subclasses, gt_kmap,img_name) in enumerate(tqdm(test_loader)):
             ''' 
@@ -485,31 +487,6 @@ if __name__=="__main__":
             log_file.flush()
 
 
-        # loss_val_k = loss_val_k/len(test_loader)
-        # loss_val_k_wo_nan = loss_val_k_wo_nan/  test_count_k
-        # loss_val_dice = loss_val_dice/len(test_loader)
-        # train_loss_dice = train_loss_dice/len(train_loader)
-        #
-        # test_loss_list_knn.append(loss_val_k)
-        # test_loss_wo_nan_list_knn.append(loss_val_k_wo_nan)
-        # test_loss_list_dice.append(loss_val_dice)
-        # train_loss_list_dice.append(train_loss_dice)
-        # train_loss_list_k_l1.append(train_loss_k/train_count_k)
-        # test_f1_mean_list.append(f1_all.mean())
-        # test_precision_mean_list.append(precision_all.mean())
-        # test_recall_mean_list.append(recall_all.mean())
-        #
-        # np.array(test_loss_list_knn).dump(os.path.join(checkpoints_save_path, 'epoch{}_test_losses_knn.npy'.format(epoch)))
-        # np.array(test_loss_wo_nan_list_knn).dump(os.path.join(checkpoints_save_path, 'epoch{}_test_losses_wo_nan_knn.npy'.format(epoch)))
-        # np.array(test_loss_list_dice).dump(os.path.join(checkpoints_save_path, 'epoch{}_test_losses_dice.npy'.format(epoch)))
-        # np.array(train_loss_list_dice).dump(os.path.join(checkpoints_save_path, 'epoch{}_train_losses_dice.npy'.format(epoch)))
-        # np.array(train_loss_list_k_l1).dump(os.path.join(checkpoints_save_path, 'epoch{}_train_losses_knn.npy'.format(epoch)))
-        # np.array(test_f1_mean_list).dump(os.path.join(checkpoints_save_path, 'epoch{}_f1_mean.npy'.format(epoch)))
-        # np.array(test_precision_mean_list).dump(os.path.join(checkpoints_save_path, 'epoch{}_prec_mean.npy'.format(epoch)))
-        # np.array(test_recall_mean_list).dump(os.path.join(checkpoints_save_path, 'epoch{}_recall_mean.npy'.format(epoch)))
-        # np.array(test_f1_wmean_list).dump(os.path.join(checkpoints_save_path, 'epoch{}_f1_wmean.npy'.format(epoch)))
-
-
         # Check if this is the best epoch so far based on fscore on validation set
         model_save_postfix = ''
         is_best_epoch = False
@@ -519,7 +496,7 @@ if __name__=="__main__":
             best_f1_mean = f1_all.mean()
             best_prec_recall_diff = abs(recall_all.mean()-precision_all.mean())
             is_best_epoch = True
-        elif ((abs(f1_all.mean() - best_f1_mean) < 0.005)
+        elif ((abs(f1_all.mean() - best_f1_mean) < 0.005) # a slightly lower f score but smaller gap between precision and recall
                 and abs(recall_all.mean()-precision_all.mean()) < best_prec_recall_diff):
             model_save_postfix += '_pr-diff'
             best_f1_mean = f1_all.mean()

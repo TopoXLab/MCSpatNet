@@ -11,27 +11,39 @@ import torch.nn as nn
 import glob
 
 from model_arch import UnetVggMultihead
-from my_dataset_wdots_til_multi_wname import CellsDataset
+from my_dataloader import CellsDataset
+
+checkpoints_root_dir = '../MCSpatNet_checkpoints' # The root directory for all training output.
+checkpoints_folder_name = 'mcspatnet_consep_1' # The name of the current training output folder under <checkpoints_root_dir>.
+eval_root_dir = '../MCSpatNet_eval'
+epoch=100 # the epoch to test
+visualize=True # whether to output a visualization of the prediction
+test_data_root = '../MCSpatNet_datasets/CoNSeP_test'
+test_split_filepath = None
 
 if __name__=="__main__":
+
+    # Initializations
 
     #0: Lymphocyte: blue
     #1: Tumor: red
     #2: Other: yellow
-    color_set = {0:(0,162,232),1:(255,0,0),2:(255,240,0)} 
+    color_set = {0:(0,162,232),1:(255,0,0),2:(0,255,0)} 
 
     # model checkpoint and output configuration parameters
-    models_root_dir = '../checkpoints_knn/cellcount_r100_multihead_concat_cluster2a_initk_configl_do0.2_restart_brcanew_s4'
-    out_dir = '../eval_knn/cellcount_r100_multihead_concat_cluster2a_initk_configl_do0.2_restart_brcanew_s4_test_fscore_eval4_minsize5_e93'
-    epoch=93
-    visualize=True
+    models_root_dir = os.path.join(checkpoints_root_dir, checkpoints_folder_name)
+    out_dir = os.path.join(eval_root_dir, checkpoints_folder_name+f'_e{epoch}') 
+
+    if(not os.path.exists(eval_root_dir)):
+        os.mkdir(eval_root_dir)
+
+    if(not os.path.exists(out_dir)):
+        os.mkdir(out_dir)
 
     # data configuration parameters
-    test_image_root='../datasets/tcga_brca_all_cc/images'
-    test_dmap_root='../datasets/tcga_brca_all_cc/gt_custom_all_3class'
-    test_dots_root='../datasets/tcga_brca_all_cc/gt_custom_all_3class'
-    test_split_filepath = '../datasets/tcga_brca_all_cc/splits/brca_ds_test_s4.txt'
-    #test_split_filepath=None
+    test_image_root = os.path.join(test_data_root, 'images')
+    test_dmap_root = os.path.join(test_data_root, 'gt_custom')
+    test_dots_root = os.path.join(test_data_root, 'gt_custom')
 
     # Model configuration parameters
     gt_multiplier = 1    
@@ -57,16 +69,13 @@ if __name__=="__main__":
     thresh_high = 0.5
     size_thresh = 5
 
-    # Initializations
-    if(not os.path.exists(out_dir)):
-        os.mkdir(out_dir)
 
     device=torch.device(gpu_or_cpu)
     model=UnetVggMultihead(kwargs={'dropout_prob':dropout_prob, 'initial_pad':initial_pad, 'interpolate':interpolate, 'conv_init':conv_init, 'n_classes':n_classes, 'n_channels':3, 'n_heads':4, 'head_classes':[1,n_classes,n_classes2, r_classes_all]})
     model.to(device)
     criterion_sig = nn.Sigmoid() # initialize sigmoid layer
     criterion_softmax = nn.Softmax(dim=1) # initialize sigmoid layer
-    test_dataset=CellsDataset(test_image_root,test_dmap_root,test_dots_root,class_indx, split_filepath=test_split_filepath,phase='test', normalize=False, aug=0, fixed_size=-1, max_scale=16)
+    test_dataset=CellsDataset(test_image_root,test_dmap_root,test_dots_root,class_indx, split_filepath=test_split_filepath,phase='test', fixed_size=-1, max_scale=16)
     test_loader=torch.utils.data.DataLoader(test_dataset,batch_size=1,shuffle=False)
 
 
@@ -75,7 +84,7 @@ if __name__=="__main__":
     # Load model
     print('test epoch ' + str(epoch) )
     model_files = glob.glob(os.path.join(models_root_dir, 'mcspat_epoch_'+str(epoch)+'_*.pth'))
-    model_files2 = glob.glob(os.path.join(models_root_dir, 'epoch_'+str(epoch)+'_*.pth'))
+    model_files2 = glob.glob(os.path.join(models_root_dir, '*epoch_'+str(epoch)+'_*.pth'))
     if((model_files == None) or (len(model_files)==0)):
         if((model_files2 == None) or (len(model_files2)==0)):
             print('not found ', 'mcspat_epoch_'+str(epoch) )
@@ -103,7 +112,6 @@ if __name__=="__main__":
             et_dmap_class=et_dmap_lst[1][:,:,2:-2,2:-2]
             et_dmap_subclasses= et_dmap_lst[2][:,:,2:-2,2:-2]
             et_kmap=et_dmap_lst[3][:,:,2:-2,2:-2]**2
-            et_dmap_class2=et_dmap_lst[-1][:,:,2:-2,2:-2]
 
 
             gt_dmap = gt_dmap > 0
@@ -162,11 +170,11 @@ if __name__=="__main__":
                 img_centers_all_all_gt[cy-3:cy+3, cx-3:cx+3,:] = (0,0,0)
 
             e_dot.astype(np.uint8).dump(
-                os.path.join(out_dir, img_name.replace('.png', '_e' + str(epoch) + '_centers' + '_allcells' + '.npy')))
+                os.path.join(out_dir, img_name.replace('.png',  '_centers' + '_all' + '.npy')))
             if(visualize):
-                io.imsave(os.path.join(out_dir, img_name.replace('.png','_e'+str(epoch)+'_centers'+'_allcells' +'.png')), (e_dot_vis*255).astype(np.uint8))
-                io.imsave(os.path.join(out_dir, img_name.replace('.png','_e'+str(epoch)+'_centers'+'_allcells' +'_overlay.png')), (img_centers_all_all).astype(np.uint8))
-                io.imsave(os.path.join(out_dir, img_name.replace('.png','_e'+str(epoch)+'_allcells' +'_hard.png')), (e_hard2*255).astype(np.uint8))
+                #io.imsave(os.path.join(out_dir, img_name.replace('.png','_centers'+'_allcells' +'.png')), (e_dot_vis*255).astype(np.uint8))
+                io.imsave(os.path.join(out_dir, img_name.replace('.png','_centers'+'_det' +'_overlay.png')), (img_centers_all_all).astype(np.uint8))
+                #io.imsave(os.path.join(out_dir, img_name.replace('.png','_allcells' +'_hard.png')), (e_hard2*255).astype(np.uint8))
 
             # end: eval detection all
 
@@ -198,26 +206,25 @@ if __name__=="__main__":
                     cy = gt_centers[0][idx]
                     img_centers_all_gt[cy-3:cy+3, cx-3:cx+3,:] = color_set[s]
 
-                e_dot.astype(np.uint8).dump(os.path.join(out_dir, img_name.replace('.png', '_e' + str(
-                    epoch) + '_centers' + '_s' + str(s) + '.npy')))
-                if(visualize):
-                    io.imsave(os.path.join(out_dir, img_name.replace('.png','_likelihood_s'+ str(s)+'.png')), (et_class_sig.squeeze()[s]*255).astype(np.uint8));
+                e_dot.astype(np.uint8).dump(os.path.join(out_dir, img_name.replace('.png', '_centers' + '_s' + str(s) + '.npy')))
+                #if(visualize):
+                #    io.imsave(os.path.join(out_dir, img_name.replace('.png','_likelihood_s'+ str(s)+'.png')), (et_class_sig.squeeze()[s]*255).astype(np.uint8));
             # end: eval classification
 
 
             et_class_sig.squeeze().astype(np.float16).dump(
-                os.path.join(out_dir, img_name.replace('.png', '_e' + str(epoch) + '_likelihood_class' + '.npy')))
+                os.path.join(out_dir, img_name.replace('.png', '_likelihood_class' + '.npy')))
             et_all_sig.squeeze().astype(np.float16).dump(
-                os.path.join(out_dir, img_name.replace('.png', '_e' + str(epoch) + '_likelihood_all' + '.npy')))
+                os.path.join(out_dir, img_name.replace('.png', '_likelihood_all' + '.npy')))
             gt_dots.squeeze().astype(np.uint8).dump(
                 os.path.join(out_dir, img_name.replace('.png', '_gt_dots_class' + '.npy')))
             gt_dots_all.squeeze().astype(np.uint8).dump(
                 os.path.join(out_dir, img_name.replace('.png', '_gt_dots_all' + '.npy')))
             if(visualize):
-                io.imsave(os.path.join(out_dir, img_name.replace('.png','_e'+str(epoch)+'_centers'+'_all' +'.png')), (img_centers_all).astype(np.uint8))
-                io.imsave(os.path.join(out_dir, img_name.replace('.png','_gt_centers'+'_all'+'.png')), (img_centers_all_gt).astype(np.uint8))
+                io.imsave(os.path.join(out_dir, img_name.replace('.png','_centers'+'_class_overlay' +'.png')), (img_centers_all).astype(np.uint8))
+                io.imsave(os.path.join(out_dir, img_name.replace('.png','_gt_centers'+'_class_overlay'+'.png')), (img_centers_all_gt).astype(np.uint8))
                 io.imsave(os.path.join(out_dir, img_name), (img).astype(np.uint8))
-                io.imsave(os.path.join(out_dir, img_name.replace('.png','_likelihood_all'+'.png')), (et_all_sig.squeeze()*255).astype(np.uint8));
+                #io.imsave(os.path.join(out_dir, img_name.replace('.png','_likelihood_all'+'.png')), (et_all_sig.squeeze()*255).astype(np.uint8));
 
             del img,gt_dots
 

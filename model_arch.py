@@ -11,7 +11,7 @@ from sa_net_arch_utilities_pytorch import CNNArchUtilsPyTorch;
 
 class UnetVggMultihead(nn.Module):
     def __init__(self, load_weights=False, kwargs=None):
-        super(UnetVggCC,self).__init__()
+        super(UnetVggMultihead,self).__init__()
 
         # predefined list of arguments
         args = {'conv_init': 'he', 'block_size':3, 'pool_size':2

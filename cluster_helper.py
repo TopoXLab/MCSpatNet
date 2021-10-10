@@ -164,6 +164,7 @@ def create_pseudo_lbl_gt(simple_train_loader, pseudo_labels_list, coord_list, im
         for s in range(len(pseudo_labels_list)):
             pseudo_labels = pseudo_labels_list[s][i]
             if(pseudo_labels is None):
+                cci += n_clusters
                 continue
             points = coord_list[s][i]
             for c in range(n_clusters):

@@ -2,6 +2,7 @@ import numpy as np
 import os
 import sys;
 import skimage.io as io
+from skimage.measure import label
 import glob
 sys.path.append("..")
 from spatial_analysis_utils_v2_sh import *
@@ -11,9 +12,10 @@ from spatial_analysis_utils_v2_sh import *
 # Configuration Variables
 
 # Configure data input/output paths
-image_dir='../../datasets/lungdata_cc/images'
-gt_dir='../../datasets/lungdata_cc/gt_custom_all'
-out_dir = '../../datasets/lungdata_cc/k_func_maps'
+root_dir = '../../MCSpatNet_datasets/CoNSeP_test'
+image_dir= os.path.join(root_dir, 'images')
+gt_dir= os.path.join(root_dir, 'gt_custom')
+out_dir = os.path.join(root_dir, 'k_func_maps')
 
 # Configure K function
 do_k_correction=True
@@ -32,7 +34,7 @@ if __name__ == "__main__":
 
     # Calculate the cross K-function at each cell and propagate the same values to all the pixels in the cell connected components in the ground truth dilated dot map or binary mask.
     for img_path in img_path_list:
-        # Load the ground truth dot maps and gaussian maps or binary masks
+        # Load the ground truth dot maps and binary masks
         print('img', img_path )
         img_name = os.path.basename(img_path)
         gt_path = os.path.join(gt_dir,img_name.replace('.png','_gt_dots.npy'));
