@@ -29,8 +29,9 @@ refer to `environment.md`.
 - **Trained models test results**: available under `pretrained_results`.
 
 ### Citation ###
-    @inproceedings{abousamra2021MCSpatNet,
-    author      =  {Shahira Abousamra and David Belinsky and John Van Arnam and Felicia Allard and Eric Yee and Rajarsi Gupta and Tahsin Kurc and Dimitris Samaras and Joel Saltz and Chao Chen},
-    title       =  {Multi-Class Cell Detection Using Spatial Context Representation},
-    booktitle   =  {International Conference on Computer Vision (ICCV)},
-    year        =  {2021}}
+	@InProceedings{Abousamra_2021_ICCV,
+    author    = {Abousamra, Shahira and Belinsky, David and Van Arnam, John and Allard, Felicia and Yee, Eric and Gupta, Rajarsi and Kurc, Tahsin and Samaras, Dimitris and Saltz, Joel and Chen, Chao},  
+    title     = {Multi-Class Cell Detection Using Spatial Context Representation},  
+    booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},  
+    year      = {2021},  
+	}
