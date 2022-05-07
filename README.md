@@ -1,8 +1,7 @@
 # MCSpatNet
 ### Repository for Multi-Class Cell Detection Using Spatial Context Representation, ICCV 2021 ###
 
-*Shahira Abousamra, David Belinsky, John Van Arnam, Felicia Allard, Eric Yee, Rajarsi Gupta, Tahsin Kurc, Dimitris Samaras, Joel Saltz, Chao Chen, Multi-Class Cell Detection Using Spatial Context Representation, ICCV 2021*.
-
+[**Shahira Abousamra, David Belinsky, John Van Arnam, Felicia Allard, Eric Yee, Rajarsi Gupta, Tahsin Kurc, Dimitris Samaras, Joel Saltz, Chao Chen, Multi-Class Cell Detection Using Spatial Context Representation, ICCV 2021.**](https://arxiv.org/pdf/2110.04886.pdf)
 
 <figure>
   <img src="./arch5.png" alt="MCSpatNet Architecture" style="width:90%">
