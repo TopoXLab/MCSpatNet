@@ -21,7 +21,9 @@ refer to `environment.md`.
 
 - **Model training and evaluation**: refer to `train_and_test.md`.
 
-- **Pre-processed datasets**: available under `datasets`.
+- **Pre-processed datasets**: available under `datasets`. Includes: <br/>
+CoNSeP dataset: <br/>
+S. Graham, Q. D. Vu, S. E. A. Raza, A. Azam, Y-W. Tsang, J. T. Kwak and N. Rajpoot. "HoVer-Net: Simultaneous Segmentation and Classification of Nuclei in Multi-Tissue Histology Images." Medical Image Analysis, Sept. 2019 (https://warwick.ac.uk/fac/cross_fac/tia/data/hovernet/)
  
 - **Trained models**: available under `pretrained_models`.
 
