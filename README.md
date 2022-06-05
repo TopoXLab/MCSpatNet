@@ -23,8 +23,12 @@ refer to `environment.md`.
 
 - **Pre-processed datasets**: available under `datasets`. Includes: <br/>
 CoNSeP dataset: <br/>
-S. Graham, Q. D. Vu, S. E. A. Raza, A. Azam, Y-W. Tsang, J. T. Kwak and N. Rajpoot. "HoVer-Net: Simultaneous Segmentation and Classification of Nuclei in Multi-Tissue Histology Images." Medical Image Analysis, Sept. 2019 (https://warwick.ac.uk/fac/cross_fac/tia/data/hovernet/)
- 
+S. Graham, Q. D. Vu, S. E. A. Raza, A. Azam, Y-W. Tsang, J. T. Kwak and N. Rajpoot. "HoVer-Net: Simultaneous Segmentation and Classification of Nuclei in Multi-Tissue Histology Images." Medical Image Analysis, Sept. 2019 .(https://warwick.ac.uk/fac/cross_fac/tia/data/hovernet/) <br/><br/> 
+BRCA-M2C dataset: <br/>
+The accompanying dataset to our paper: <br/>
+S. Abousamra, D. Belinsky, J. V. Arnam, F. Allard, E. Yee, R. Gupta, T. Kurc, D. Samaras, J. Saltz, C. Chen, "Multi-Class Cell Detection Using Spatial Context Representation", ICCV 2021. <br/>
+(https://github.com/TopoXLab/Dataset-BRCA-M2C)
+
 - **Trained models**: available under `pretrained_models`.
 
 - **Trained models test results**: available under `pretrained_results`.

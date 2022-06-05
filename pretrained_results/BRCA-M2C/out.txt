@@ -1,0 +1,10 @@
+epoch 45 s 0 precision_all 0.558891454965358 recall_all 0.7570385818561001 f1_all 0.6430469441984057
+epoch 45 s 0 precision_mean nan recall_mean nan f1_mean nan
+epoch 45 s 1 precision_all 0.7836459361632115 recall_all 0.7801801801801802 f1_all 0.7819092177624559
+epoch 45 s 1 precision_mean nan recall_mean nan f1_mean nan
+epoch 45 s 2 precision_all 0.5070275897969807 recall_all 0.5450475657526581 f1_all 0.5253505933117583
+epoch 45 s 2 precision_mean 0.505436431497648 recall_mean 0.5471396630930312 f1_mean 0.5254619029745461
+epoch 45 s 3 precision_all 0.8132931813293182 recall_all 0.8543667382216699 f1_all 0.8333241500909141
+epoch 45 s 3 precision_mean 0.8199986109643352 recall_mean 0.854963833056235 f1_mean 0.8371162685272083
+epoch 45 all precision_all 0.6657145405637171 recall_all 0.734158266502652 f1_all 0.6959077263408835
+epoch 45 all precision_mean nan recall_mean nan f1_mean nan
