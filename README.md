@@ -29,7 +29,7 @@ The accompanying dataset to our paper: <br/>
 S. Abousamra, D. Belinsky, J. V. Arnam, F. Allard, E. Yee, R. Gupta, T. Kurc, D. Samaras, J. Saltz, C. Chen, "Multi-Class Cell Detection Using Spatial Context Representation", ICCV 2021. <br/>
 (https://github.com/TopoXLab/Dataset-BRCA-M2C)
 
-- **Trained models**: available under `pretrained_models`.
+- **Trained models**: available under `pretrained_models`. Refer to `pretrained_models.md`.
 
 - **Trained models test results**: available under `pretrained_results`.
 
